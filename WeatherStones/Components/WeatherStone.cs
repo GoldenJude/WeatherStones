@@ -52,7 +52,8 @@ namespace WeatherStones.Components
         {
             if (!Valid) return;
 
-            env.m_environment = GetText();
+            //env.m_environment = GetText();
+            env.m_environment = znv.GetZDO().GetString(zdo_env);
         }
 
         private void UpdateColor()
