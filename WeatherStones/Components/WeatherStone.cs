@@ -26,6 +26,8 @@ namespace WeatherStones.Components
             if (!Valid) return;
 
             env = GetComponentInChildren<EnvZone>(true);
+            env.m_force = false; //cant be fucked opening the project and recompiling bundle
+
             renderer = GetComponentInChildren<MeshRenderer>(true);
 
             znv.Register(nameof(RPC_SetEnv), new Action<long, string>(RPC_SetEnv));

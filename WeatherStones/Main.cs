@@ -16,7 +16,7 @@ namespace WeatherStones
         public const string MODNAME = "WeatherStones";
         public const string AUTHOR = "GoldenJude";
         public const string GUID = AUTHOR + "_" + MODNAME;
-        public const string VERSION = "0.1.0";
+        public const string VERSION = "0.1.2";
 
         public static ManualLogSource log;
 
