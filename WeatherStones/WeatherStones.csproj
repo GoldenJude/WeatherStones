@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="environment.props"/>
   <PropertyGroup>
     <LangVersion>8</LangVersion>
     <NuGetPackageImportStamp>
@@ -14,7 +15,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>WeatherStones</RootNamespace>
     <AssemblyName>WeatherStones</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
@@ -36,27 +37,54 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <Choose>
+    <When Condition="($(OS) == 'Unix' OR $(OS) == 'OSX') AND $(GamePath) == ''">
+      <PropertyGroup>
+        <GamePath Condition="!Exists('$(GamePath)')">$(HOME)/.steam/steam/steamapps/common/Valheim</GamePath>
+        <GamePath Condition="!Exists('$(GamePath)')">$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim/Contents/MacOS</GamePath>
+        <CorlibPath Condition="!Exists('$(CorlibPath)') AND Exists('$(GamePath)')">$(GamePath)\valheim_Data\Managed</CorlibPath>
+        <CorlibPath Condition="!Exists('$(CorlibPath)')">$(GamePath)/unstripped_corelib</CorlibPath>
+      </PropertyGroup>
+    </When>
+    <When Condition="($(OS) == 'Windows_NT') AND $(GamePath) == ''">
+      <PropertyGroup>
+        <GamePath Condition="!Exists('$(GamePath)')">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 892970', 'InstallLocation', null, RegistryView.Registry64, RegistryView.Registry32))</GamePath>
+        <_SteamLibraryPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Valve\Steam', 'SteamPath', null, RegistryView.Registry32))</_SteamLibraryPath>
+        <GamePath Condition="!Exists('$(GamePath)') AND '$(_SteamLibraryPath)' != ''">$(_SteamLibraryPath)\steamapps\common\Valheim</GamePath>
+        <GamePath Condition="!Exists('$(GamePath)') AND Exists('$(ValheimGamePath)')">$(ValheimGamePath)</GamePath>
+        <GamePath Condition="!Exists('$(GamePath)')">C:\Program Files\Steam\steamapps\common\Valheim</GamePath>
+        <GamePath Condition="!Exists('$(GamePath)')">C:\Program Files (x86)\Steam\steamapps\common\Valheim</GamePath>
+        <GamePath Condition="!Exists('$(GamePath)')">D:\SteamLibrary\steamapps\common\Valheim</GamePath>
+        <BepInExPath Condition="!Exists('$(BepInExPath)')AND Exists('$(GamePath)')">$(GamePath)\BepInEx</BepInExPath>
+        <CorlibPath Condition="!Exists('$(CorlibPath)') AND Exists('$(GamePath)')">$(GamePath)\valheim_Data\Managed</CorlibPath>
+        <CorlibPath Condition="!Exists('$(CorlibPath)') AND Exists('$(GamePath)')">$(GamePath)\unstripped_corlib</CorlibPath>
+        <LibrariesPath Condition="!Exists('$(LibrariesPath)')">Libs</LibrariesPath>
+        <PublicizedAssembliesPath Condition="!Exists('$(PublicizedAssembliesPath)') AND Exists('$(GamePath)')">$(GamePath)\valheim_Data\Managed\publicized_assemblies</PublicizedAssembliesPath>
+        <AfterTargets Condition="'$(AfterTargets)' == ''">ILRepacker</AfterTargets>
+      </PropertyGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>D:\SteamLibrary\steamapps\common\Valheim\BepInEx\core\0Harmony.dll</HintPath>
+      <HintPath>$(GamePath)\BepInEx\core\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="assembly_guiutils_publicized">
-      <HintPath>D:\SteamLibrary\steamapps\common\Valheim\valheim_Data\Managed\publicized_assemblies\assembly_guiutils_publicized.dll</HintPath>
+      <HintPath>$(PublicizedAssembliesPath)\assembly_guiutils_publicized.dll</HintPath>
     </Reference>
     <Reference Include="assembly_utils_publicized">
-      <HintPath>D:\SteamLibrary\steamapps\common\Valheim\valheim_Data\Managed\publicized_assemblies\assembly_utils_publicized.dll</HintPath>
+      <HintPath>$(PublicizedAssembliesPath)\assembly_utils_publicized.dll</HintPath>
     </Reference>
     <Reference Include="assembly_valheim_publicized">
-      <HintPath>D:\SteamLibrary\steamapps\common\Valheim\valheim_Data\Managed\publicized_assemblies\assembly_valheim_publicized.dll</HintPath>
+      <HintPath>$(PublicizedAssembliesPath)\assembly_valheim_publicized.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>D:\SteamLibrary\steamapps\common\Valheim\BepInEx\core\BepInEx.dll</HintPath>
+      <HintPath>$(BepInExPath)\core\BepInEx.dll</HintPath>
     </Reference>
     <Reference Include="ServerSync">
-      <HintPath>..\..\valheim_references_additional\ServerSync.dll</HintPath>
+      <HintPath>$(LibrariesPath)\ServerSync.dll</HintPath>
     </Reference>
     <Reference Include="ShaderReplacer">
-      <HintPath>..\..\valheim_references_additional\ShaderReplacer.dll</HintPath>
+      <HintPath>$(LibrariesPath)\ShaderReplacer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -67,18 +95,18 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>D:\SteamLibrary\steamapps\common\Valheim\unstripped_corlib\UnityEngine.dll</HintPath>
+      <HintPath>$(CorlibPath)\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\SteamLibrary\steamapps\common\Valheim\unstripped_corlib\UnityEngine.AssetBundleModule.dll</HintPath>
+      <HintPath>$(CorlibPath)\UnityEngine.AssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\Valheim\unstripped_corlib\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(CorlibPath)\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\SteamLibrary\steamapps\common\Valheim\unstripped_corlib\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>$(CorlibPath)\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -101,6 +129,9 @@
   <ItemGroup>
     <None Include="packages.config" />
     <EmbeddedResource Include="Resources\weatherstone" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="environment.props" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets')" />
